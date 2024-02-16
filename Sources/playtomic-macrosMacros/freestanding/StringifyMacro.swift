@@ -1,4 +1,11 @@
-import SwiftCompilerPlugin
+//
+//  StringifyMacro.swift
+//
+//
+//  Created by Manuel González Villegas on 12/9/23.
+//
+
+import Foundation
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -25,9 +32,3 @@ public struct StringifyMacro: ExpressionMacro {
     }
 }
 
-@main
-struct playtomic_macrosPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        StringifyMacro.self,
-    ]
-}
