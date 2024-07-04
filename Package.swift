@@ -4,52 +4,32 @@
 import PackageDescription
 import CompilerPluginSupport
 
+let mainProjectName = "PlaytomicMacros"
+let sourceProjectName = "\(mainProjectName)Source"
+let clientProjectName = "\(mainProjectName)Client"
+let testProjectName = "\(mainProjectName)Tests"
+
 let package = Package(
-    name: "playtomic-macros",
-    platforms: [
-        .iOS(.v13)
-    ],
+    name: mainProjectName,
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "playtomic-macros",
-            targets: ["playtomic-macros"]
-        ),
-        .executable(
-            name: "playtomic-macrosClient",
-            targets: ["playtomic-macrosClient"]
-        ),
+        .library(name: mainProjectName, targets: [mainProjectName]),
+        .executable(name: clientProjectName, targets: [clientProjectName])
     ],
     dependencies: [
-        // Depend on the latest Swift 5.9 prerelease of SwiftSyntax
-        .package(
-            url: "https://github.com/apple/swift-syntax.git",
-            from: "509.0.0-swift-5.9-DEVELOPMENT-SNAPSHOT-2023-04-25-b"
-        ),
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        // Macro implementation that performs the source transformation of a macro.
-        .macro(
-            name: "playtomic-macrosMacros",
-            dependencies: [
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-            ]
-        ),
-
-        // Library that exposes a macro as part of its API, which is used in client programs.
-        .target(name: "playtomic-macros", dependencies: ["playtomic-macrosMacros"]),
-
-        // A client of the library, which is able to use the macro in its own code.
-        .executableTarget(name: "playtomic-macrosClient", dependencies: ["playtomic-macros"]),
-
-        // A test target used to develop the macro implementation.
+        .macro(name: sourceProjectName, dependencies: [
+            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+            .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+        ]),
+        .target(name: mainProjectName, dependencies: [Target.Dependency(stringLiteral: sourceProjectName)]),
+        .executableTarget(name: clientProjectName, dependencies: [Target.Dependency(stringLiteral: mainProjectName)]),
         .testTarget(
-            name: "playtomic-macrosTests",
+            name: testProjectName,
             dependencies: [
-                "playtomic-macrosMacros",
+                Target.Dependency(stringLiteral: sourceProjectName),
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
