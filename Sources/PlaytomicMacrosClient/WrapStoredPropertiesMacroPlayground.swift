@@ -14,5 +14,6 @@ struct OldStorage {
 }
 
 func runWrapStoredPropertiesMacroPlayground() {
-
+    startRunner()
+    defer { stopRunner() }
 }

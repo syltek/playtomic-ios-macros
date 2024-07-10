@@ -20,6 +20,8 @@ struct ExampleViewState {
 }
 
 func runCopyableMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
     let x = ExampleViewState(title: "1", count: 2)
     print("@Copyable:", x)
     print("@Copyable:", x.copy(title: "2", count: .value(nil)))
