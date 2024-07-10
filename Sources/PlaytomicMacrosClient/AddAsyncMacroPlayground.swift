@@ -14,6 +14,8 @@ func sportsSelector(sports: [String], callback: @escaping (String) -> Void) -> V
 }
 
 func runAddAsyncMacroPlayground() async {
+    startRunner()
+    defer { stopRunner() }
     let sport = await sportsSelector(sports: ["Padel", "Tenis", "Pickleball"])
     print("@addAsyncMacro:", sport)
 }

@@ -29,13 +29,6 @@ public enum SealedMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        //        guard declaration.as(StructDeclSyntax.self) != nil || declaration.as(ClassDeclSyntax.self) != nil,
-        //              let name = declaration.as(StructDeclSyntax.self)?.name ?? declaration.as(ClassDeclSyntax.self)?.name else {
-        //            let diagnostic = Diagnostic(node: node, message: CopyableMacroDiagnostic.notAStructOrClass)
-        //            context.diagnose(diagnostic)
-        //            return []
-        //        }
-
 
         guard let typeIdentifier = type.as(IdentifierTypeSyntax.self)?.name.trimmed.text else {
             return []
@@ -73,11 +66,9 @@ public enum SealedMacro: ExtensionMacro {
             }
         }
 
-        print("PRINT<<", sealedTypes)
-
         let sealedTypesSynax = sealedTypes.keys.map { inheritedClassName in
             generateEnumType(
-                typeName: inheritedClassName,
+                typeName: typeIdentifier.diff(inheritedClassName + SEALED_TYPE_SUFFIX).joined(),
                 onGenerateCases: {
                     generateEnumCases(
                         parenTypeName: typeIdentifier,
@@ -87,40 +78,34 @@ public enum SealedMacro: ExtensionMacro {
             )
         }.joined(separator: "\n\n").appending("\n")
 
-//        let typeProperty = generateTypeProperty(
-//            parenTypeName: typeIdentifier,
-//            allCases: sealedTypes[typeIdentifier] ?? []
-//        ).appending("\n")
-
         let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
             """
             extension \(type.trimmed) {
             \(raw: sealedTypesSynax)
             }
             """
-            )
-
-//        let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
-//            """
-//            extension \(type.trimmed) {
-//            \(raw: sealedTypesSynax)
-//            \(raw: typeProperty)
-//            }
-//            """
-//            )
+        )
 
 
         let sealedTypesResolutionExtensionSyntaxes = try sealedTypes.keys
             .sorted(by: { lhs, rhs in lhs == typeIdentifier })
             .map { sealedType in
-            try generateSealedTypesExtensions(
-                parenTypeName: typeIdentifier,
-                subActionTypeName: sealedType,
-                allCases: sealedTypes[sealedType] ?? []
-            )
-        }
+                try generateSealedTypesExtensions(
+                    parenTypeName: typeIdentifier,
+                    subTypeName: sealedType,
+                    subActionTypeName: typeIdentifier.diff(sealedType).joined(),
+                    allCases: sealedTypes[sealedType] ?? []
+                )
+            }.joined(separator: "\n\n")
 
-        return [sealedTypesDefinitionExtensionSyntax] + sealedTypesResolutionExtensionSyntaxes
+        return [try ExtensionDeclSyntax(
+            """
+            extension \(type.trimmed) {
+            \(raw: sealedTypesSynax)
+            \(raw: sealedTypesResolutionExtensionSyntaxes)
+            }
+            """
+        )]
     }
 
     private static func generateEnumType(
@@ -128,7 +113,7 @@ public enum SealedMacro: ExtensionMacro {
         onGenerateCases: @escaping () -> String
     ) -> String {
         """
-        enum \(typeName)\(SEALED_TYPE_SUFFIX) {
+        enum \(typeName) {
         \(onGenerateCases())
         }
         """
@@ -142,45 +127,43 @@ public enum SealedMacro: ExtensionMacro {
         .joined(separator: "\n")
     }
 
-    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
-        let allCasesSyntax = allCases.map { eachCase in
-            let name = eachCase.name.text
-            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
-        }.joined(separator: "\n")
-
-        return """
-        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
-        switch self {
-        \(allCasesSyntax)
-        default: fatalError("Unknown subclass")
-        }
-        }
-        """
-    }
+//    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
+//        let allCasesSyntax = allCases.map { eachCase in
+//            let name = eachCase.name.text
+//            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
+//        }.joined(separator: "\n")
+//
+//        return """
+//        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
+//        switch self {
+//        \(allCasesSyntax)
+//        default: fatalError("Unknown subclass")
+//        }
+//        }
+//        """
+//    }
 
 
     private static func generateSealedTypesExtensions(
         parenTypeName: String,
+        subTypeName: String,
         subActionTypeName: String,
         allCases: [ClassDeclSyntax]
-    ) throws -> ExtensionDeclSyntax {
+    ) -> String {
         let allCasesSyntax = allCases.map { eachCase in
             let name = eachCase.name.text
             return "case is \(parenTypeName).\(name): \(parenTypeName).\(subActionTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
         }.joined(separator: "\n")
 
-        return try ExtensionDeclSyntax(
+        return
         """
-        extension \(raw: subActionTypeName) {
-        var type: \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
+        var \(subActionTypeName.isEmpty ? "type" : "\(subActionTypeName.lowercased())Type"): \(parenTypeName).\(subActionTypeName)\(SEALED_TYPE_SUFFIX)? {
         switch self {
-        \(raw: allCasesSyntax)
-        default: fatalError("Unknown \(raw: subActionTypeName) type")
-        }
+        \(allCasesSyntax)
+        default: nil
         }
         }
         """
-        )
     }
 
 }
