@@ -74,7 +74,7 @@ private func handleViewAction(_ action: LevelUpgradeViewAction) -> String {
 
 // Handling specific action types
 private func handleNavigationAction(_ action: LevelUpgradeNavigationAction) -> String {
-    switch action.type {
+    switch action.navigationType {
     case let .OnUpgradeSuccess(action): "Navigation: Upgrade success from \(action.from) to \(action.to)"
     case let .OnUpgradeError(action): "Navigation: Upgrade error: \(action.error)"
     case .OnUpgradeSkipped: "Navigation: Upgrade skipped"
@@ -82,7 +82,7 @@ private func handleNavigationAction(_ action: LevelUpgradeNavigationAction) -> S
 }
 
 private func handleEventAction(_ action: LevelUpgradeEventAction) -> String {
-    switch action.type {
+    switch action.eventType {
     case .OnAppear: "Event: On appear"
     case let .OnUpgradeStarted(action): "Event: Upgrade started from \(action.from) to \(action.to)"
     case .OnUpgradeSkipped: "Event: Upgrade skipped"
@@ -98,6 +98,6 @@ func runSealedMacroPlayground() {
     let y: LevelUpgradeEventAction = LevelUpgradeViewAction.OnAppear()
     let z: LevelUpgradeNavigationAction = LevelUpgradeViewAction.OnUpgradeSkipped()
     print(x.type)
-    print(y.type)
-    print(z.type)
+    print(x.navigationType)
+    print(x.eventType)
 }

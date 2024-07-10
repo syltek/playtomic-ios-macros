@@ -47,3 +47,33 @@ extension ClassDeclSyntax {
         } != nil
     }
 }
+
+extension String {
+    var wordsSeparatedByCapitalLetter: [String] {
+        self.lazy
+            .map({ $0.isUppercase ? " \($0)" : "\($0)" })
+            .joined()
+            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            .components(separatedBy: " ")
+    }
+
+    func diff(_ rhs: String) -> [String] {
+        let lhsWords = wordsSeparatedByCapitalLetter
+        let rhsWords = rhs.wordsSeparatedByCapitalLetter
+        var differences: [String] = []
+
+        let minLength = min(lhsWords.count, rhsWords.count)
+
+        for i in 0..<minLength {
+            if lhsWords[i] != rhsWords[i] {
+                differences.append(rhsWords[i])
+            }
+        }
+
+        if rhsWords.count > minLength {
+            differences.append(contentsOf: rhsWords[minLength...])
+        }
+
+        return differences
+    }
+}

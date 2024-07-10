@@ -77,7 +77,7 @@ public enum SealedMacro: ExtensionMacro {
 
         let sealedTypesSynax = sealedTypes.keys.map { inheritedClassName in
             generateEnumType(
-                typeName: inheritedClassName,
+                typeName: typeIdentifier.diff(inheritedClassName + SEALED_TYPE_SUFFIX).joined(),
                 onGenerateCases: {
                     generateEnumCases(
                         parenTypeName: typeIdentifier,
@@ -87,38 +87,25 @@ public enum SealedMacro: ExtensionMacro {
             )
         }.joined(separator: "\n\n").appending("\n")
 
-//        let typeProperty = generateTypeProperty(
-//            parenTypeName: typeIdentifier,
-//            allCases: sealedTypes[typeIdentifier] ?? []
-//        ).appending("\n")
-
         let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
             """
             extension \(type.trimmed) {
             \(raw: sealedTypesSynax)
             }
             """
-            )
-
-//        let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
-//            """
-//            extension \(type.trimmed) {
-//            \(raw: sealedTypesSynax)
-//            \(raw: typeProperty)
-//            }
-//            """
-//            )
+        )
 
 
         let sealedTypesResolutionExtensionSyntaxes = try sealedTypes.keys
             .sorted(by: { lhs, rhs in lhs == typeIdentifier })
             .map { sealedType in
-            try generateSealedTypesExtensions(
-                parenTypeName: typeIdentifier,
-                subActionTypeName: sealedType,
-                allCases: sealedTypes[sealedType] ?? []
-            )
-        }
+                try generateSealedTypesExtensions(
+                    parenTypeName: typeIdentifier,
+                    subTypeName: sealedType,
+                    subActionTypeName: typeIdentifier.diff(sealedType).joined(),
+                    allCases: sealedTypes[sealedType] ?? []
+                )
+            }
 
         return [sealedTypesDefinitionExtensionSyntax] + sealedTypesResolutionExtensionSyntaxes
     }
@@ -128,7 +115,7 @@ public enum SealedMacro: ExtensionMacro {
         onGenerateCases: @escaping () -> String
     ) -> String {
         """
-        enum \(typeName)\(SEALED_TYPE_SUFFIX) {
+        enum \(typeName) {
         \(onGenerateCases())
         }
         """
@@ -142,25 +129,26 @@ public enum SealedMacro: ExtensionMacro {
         .joined(separator: "\n")
     }
 
-    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
-        let allCasesSyntax = allCases.map { eachCase in
-            let name = eachCase.name.text
-            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
-        }.joined(separator: "\n")
-
-        return """
-        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
-        switch self {
-        \(allCasesSyntax)
-        default: fatalError("Unknown subclass")
-        }
-        }
-        """
-    }
+//    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
+//        let allCasesSyntax = allCases.map { eachCase in
+//            let name = eachCase.name.text
+//            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
+//        }.joined(separator: "\n")
+//
+//        return """
+//        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
+//        switch self {
+//        \(allCasesSyntax)
+//        default: fatalError("Unknown subclass")
+//        }
+//        }
+//        """
+//    }
 
 
     private static func generateSealedTypesExtensions(
         parenTypeName: String,
+        subTypeName: String,
         subActionTypeName: String,
         allCases: [ClassDeclSyntax]
     ) throws -> ExtensionDeclSyntax {
@@ -171,11 +159,11 @@ public enum SealedMacro: ExtensionMacro {
 
         return try ExtensionDeclSyntax(
         """
-        extension \(raw: subActionTypeName) {
-        var type: \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
+        extension \(raw: subTypeName) {
+        var \(subActionTypeName.isEmpty ? "type" : "\(raw: subActionTypeName.lowercased())Type"): \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
         switch self {
         \(raw: allCasesSyntax)
-        default: fatalError("Unknown \(raw: subActionTypeName) type")
+        default: fatalError("Unknown \(raw: subTypeName) type")
         }
         }
         }
