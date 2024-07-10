@@ -31,3 +31,19 @@ extension VariableDeclSyntax {
         }
     }
 }
+
+extension ClassDeclSyntax {
+
+    var isContainProperty: Bool {
+        memberBlock.members.first { member in
+            guard let variable = member.decl.as(VariableDeclSyntax.self),
+                  !variable.isComputed,
+                  !variable.isStatic
+            else {
+                return false
+            }
+
+            return true
+        } != nil
+    }
+}

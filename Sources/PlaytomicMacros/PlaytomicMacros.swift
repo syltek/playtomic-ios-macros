@@ -66,3 +66,5 @@ public macro storedAccess<T>(defaultValue: T, key: String? = nil, store: UserDef
 @attached(extension, conformances: Equatable)
 public macro equatable() = #externalMacro(module: "PlaytomicMacrosSource", type: "EquatableMacro")
 
+@attached(extension, names: arbitrary)
+public macro Sealed() = #externalMacro(module: "PlaytomicMacrosSource", type: "SealedMacro")
