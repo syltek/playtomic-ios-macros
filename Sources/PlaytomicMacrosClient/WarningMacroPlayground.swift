@@ -9,5 +9,7 @@ import Foundation
 import PlaytomicMacros
 
 func runWarningMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
 #warning("This macro generates a message")
 }

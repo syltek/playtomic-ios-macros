@@ -12,10 +12,10 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 enum SealedMacroDiagnostic: PlaytomicMacroError {
-    case notAStructOrClass
+    case smth
 
     var message: String {
-        "'@Copyable' can only be applied to a struct or class"
+        "Sealed error"
     }
 }
 
@@ -29,13 +29,6 @@ public enum SealedMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        //        guard declaration.as(StructDeclSyntax.self) != nil || declaration.as(ClassDeclSyntax.self) != nil,
-        //              let name = declaration.as(StructDeclSyntax.self)?.name ?? declaration.as(ClassDeclSyntax.self)?.name else {
-        //            let diagnostic = Diagnostic(node: node, message: CopyableMacroDiagnostic.notAStructOrClass)
-        //            context.diagnose(diagnostic)
-        //            return []
-        //        }
-
 
         guard let typeIdentifier = type.as(IdentifierTypeSyntax.self)?.name.trimmed.text else {
             return []
@@ -73,11 +66,9 @@ public enum SealedMacro: ExtensionMacro {
             }
         }
 
-        print("PRINT<<", sealedTypes)
-
         let sealedTypesSynax = sealedTypes.keys.map { inheritedClassName in
             generateEnumType(
-                typeName: typeIdentifier.diff(inheritedClassName + SEALED_TYPE_SUFFIX).joined(),
+                typeName: (inheritedClassName + SEALED_TYPE_SUFFIX).excluding(typeIdentifier).joined(),
                 onGenerateCases: {
                     generateEnumCases(
                         parenTypeName: typeIdentifier,
@@ -102,7 +93,7 @@ public enum SealedMacro: ExtensionMacro {
                 try generateSealedTypesExtensions(
                     parenTypeName: typeIdentifier,
                     subTypeName: sealedType,
-                    subActionTypeName: typeIdentifier.diff(sealedType).joined(),
+                    subActionTypeName: sealedType.excluding(typeIdentifier).joined(),
                     allCases: sealedTypes[sealedType] ?? []
                 )
             }
@@ -129,23 +120,6 @@ public enum SealedMacro: ExtensionMacro {
         .joined(separator: "\n")
     }
 
-//    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
-//        let allCasesSyntax = allCases.map { eachCase in
-//            let name = eachCase.name.text
-//            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
-//        }.joined(separator: "\n")
-//
-//        return """
-//        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
-//        switch self {
-//        \(allCasesSyntax)
-//        default: fatalError("Unknown subclass")
-//        }
-//        }
-//        """
-//    }
-
-
     private static func generateSealedTypesExtensions(
         parenTypeName: String,
         subTypeName: String,
@@ -157,13 +131,15 @@ public enum SealedMacro: ExtensionMacro {
             return "case is \(parenTypeName).\(name): \(parenTypeName).\(subActionTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
         }.joined(separator: "\n")
 
+        let str = #"\(self)"#
+
         return try ExtensionDeclSyntax(
         """
-        extension \(raw: subTypeName) {
+        extension \(raw: subTypeName == parenTypeName ? "" : "\("\(parenTypeName).")")\(raw: subTypeName) {
         var \(subActionTypeName.isEmpty ? "type" : "\(raw: subActionTypeName.lowercased())Type"): \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
         switch self {
         \(raw: allCasesSyntax)
-        default: fatalError("Unknown \(raw: subTypeName) type")
+        default: fatalError("Unknown \(raw: subTypeName) type \(raw: str)")
         }
         }
         }

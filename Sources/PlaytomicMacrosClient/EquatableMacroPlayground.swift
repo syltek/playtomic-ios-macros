@@ -21,6 +21,8 @@ struct MatchTeam {
 }
 
 func runEquatableMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
     let id1 = UUID().uuidString
     let match1 = Match(id: id1, team: MatchTeam(id: id1, playerd: []))
     let match2 = Match(id: id1, team: MatchTeam(id: id1, playerd: []))

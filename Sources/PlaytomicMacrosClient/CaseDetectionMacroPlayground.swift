@@ -15,6 +15,8 @@ enum ProfileViewState {
 }
 
 func runCaseDetectionMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
     var state = ProfileViewState.loading
     print("@caseDetection: is the view state loading?: \(state.isLoading)")
     state = ProfileViewState.loaded(userName: "Random name")

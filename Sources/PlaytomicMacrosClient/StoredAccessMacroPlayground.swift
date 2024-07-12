@@ -14,5 +14,6 @@ struct User {
 }
 
 func runStoredAccessMacroPlayground() {
-
+    startRunner()
+    defer { stopRunner() }
 }

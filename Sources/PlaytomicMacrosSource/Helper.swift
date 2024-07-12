@@ -48,6 +48,26 @@ extension ClassDeclSyntax {
     }
 }
 
+extension DeclGroupSyntax {
+    var isClass: Bool {
+        self.as(ClassDeclSyntax.self) != nil
+    }
+
+    var isStruct: Bool {
+        self.as(StructDeclSyntax.self) != nil
+    }
+
+    var isEnum: Bool {
+        self.as(EnumDeclSyntax.self) != nil
+    }
+}
+
+extension ClassDeclSyntax {
+    var inheritedClasssName: String? {
+        inheritanceClause?.inheritedTypes.first?.as(InheritedTypeSyntax.self)?.type.as(IdentifierTypeSyntax.self)?.name.text
+    }
+}
+
 extension String {
     var wordsSeparatedByCapitalLetter: [String] {
         self.lazy
@@ -57,23 +77,15 @@ extension String {
             .components(separatedBy: " ")
     }
 
-    func diff(_ rhs: String) -> [String] {
+    func excluding(_ rhs: String) -> [String] {
         let lhsWords = wordsSeparatedByCapitalLetter
         let rhsWords = rhs.wordsSeparatedByCapitalLetter
-        var differences: [String] = []
-
-        let minLength = min(lhsWords.count, rhsWords.count)
-
-        for i in 0..<minLength {
-            if lhsWords[i] != rhsWords[i] {
-                differences.append(rhsWords[i])
+        return lhsWords.compactMap { word in
+            if !rhsWords.contains(word) {
+                word
+            } else {
+                nil
             }
         }
-
-        if rhsWords.count > minLength {
-            differences.append(contentsOf: rhsWords[minLength...])
-        }
-
-        return differences
     }
 }

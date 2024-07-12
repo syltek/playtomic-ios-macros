@@ -21,7 +21,8 @@ struct MyPlugin: CompilerPlugin {
     WrapStoredPropertiesMacro.self,
     StoredAccessMacro.self,
     EquatableMacro.self,
-    SealedMacro.self
+    SealedMacro.self,
+    AddInitMacro.self
   ]
 }
 #endif
