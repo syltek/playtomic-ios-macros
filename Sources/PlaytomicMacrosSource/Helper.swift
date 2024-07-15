@@ -77,6 +77,13 @@ extension String {
             .components(separatedBy: " ")
     }
 
+    var lowerCasedFirstWord: String {
+        wordsSeparatedByCapitalLetter
+            .enumerated()
+            .map { $0 == Int.zero ? $1.lowercased() : $1 }
+            .joined()
+    }
+
     func excluding(_ rhs: String) -> [String] {
         let lhsWords = wordsSeparatedByCapitalLetter
         let rhsWords = rhs.wordsSeparatedByCapitalLetter

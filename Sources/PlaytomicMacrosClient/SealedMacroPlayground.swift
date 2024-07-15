@@ -8,54 +8,50 @@
 import Foundation
 import PlaytomicMacros
 
-// Imagine this is imported from Mozart xD
 protocol ViewAction { }
 
 @Sealed
-class LevelUpgradeViewAction: ViewAction {
+public class LevelUpgradeViewAction: ViewAction {
     private init() {}
 
-    protocol NavigationAction {
-        var navigationType: NavigationSealedType { get }
+    public protocol NavigationAction {
+        var navigationActionType: NavigationActionSealedType { get }
     }
 
-    protocol EventAction {
-        var eventType: EventSealedType { get }
+    public protocol EventAction {
+        var eventActionType: EventActionSealedType { get }
     }
 
-    protocol ObserverAction {
-        var observerType: ObserverSealedType { get }
-    }
-
-    @AddInit
-    class OnAppear: LevelUpgradeViewAction, EventAction, ObserverAction {
+    public protocol ObserverAction {
+        var observerActionType: ObserverActionSealedType { get }
     }
 
     @AddInit
-    class Upgrade: LevelUpgradeViewAction { }
+    public class OnAppear: LevelUpgradeViewAction, EventAction, ObserverAction { }
 
     @AddInit
-    class OnUpgradeStarted: LevelUpgradeViewAction, EventAction {
+    public class Upgrade: LevelUpgradeViewAction { }
+
+    @AddInit
+    public class OnUpgradeStarted: LevelUpgradeViewAction, EventAction {
         let from: Decimal
         let to: Decimal
     }
 
     @AddInit
-    class OnUpgradeSuccess: LevelUpgradeViewAction, NavigationAction {
+    public class OnUpgradeSuccess: LevelUpgradeViewAction, NavigationAction {
         let from: Decimal
         let to: Decimal
     }
 
     @AddInit
-    class OnUpgradeError: LevelUpgradeViewAction, NavigationAction {
+    public class OnUpgradeError: LevelUpgradeViewAction, NavigationAction {
         let error: String
     }
 
     @AddInit
-    class OnUpgradeSkipped: LevelUpgradeViewAction, NavigationAction, EventAction { }
+    public class OnUpgradeSkipped: LevelUpgradeViewAction, NavigationAction, EventAction { }
 }
-
-
 
 func handle(action: LevelUpgradeViewAction) {
     print("VIEW:", handleViewAction(action))
@@ -83,7 +79,7 @@ private func handleViewAction(_ action: LevelUpgradeViewAction) -> String {
 
 // Handling specific action types
 private func handleNavigationAction(_ action: LevelUpgradeViewAction.NavigationAction) -> String {
-    return switch action.navigationType {
+    return switch action.navigationActionType {
     case let .OnUpgradeSuccess(action): "Navigation: Upgrade success from \(action.from) to \(action.to)"
     case let .OnUpgradeError(action): "Navigation: Upgrade error: \(action.error)"
     case .OnUpgradeSkipped: "Navigation: Upgrade skipped"
@@ -91,7 +87,7 @@ private func handleNavigationAction(_ action: LevelUpgradeViewAction.NavigationA
 }
 
 private func handleEventAction(_ action: LevelUpgradeViewAction.EventAction) -> String {
-    return switch action.eventType {
+    return switch action.eventActionType {
     case .OnAppear: "Event: On appear"
     case let .OnUpgradeStarted(action): "Event: Upgrade started from \(action.from) to \(action.to)"
     case .OnUpgradeSkipped: "Event: Upgrade skipped"
@@ -107,22 +103,13 @@ func runSealedMacroPlayground() {
     handle(action: LevelUpgradeViewAction.OnUpgradeSuccess(from: 1.0, to: 2.0))
     handle(action: LevelUpgradeViewAction.OnUpgradeStarted(from: 1.0, to: 2.0))
 
-//    let x: LevelUpgradeViewAction = LevelUpgradeViewAction.OnAppear()
+    let x: LevelUpgradeViewAction = LevelUpgradeViewAction.OnAppear()
 
+    // FIXME: How `navigationType` is appearing on LevelUpgradeViewAction? it is declared under LevelUpgradeViewAction.NavigationAction only...
+    // Uncomment following line to see the crash
+    //    print("x.navigationType: ", x.navigationActionType)
+    // FIXME: same
+    // Uncomment following line to see the crash
+    // print("x.eventType: ", x.eventActionType)
 }
 
-/*
-
- //    let x: LevelUpgradeViewAction = LevelUpgradeViewAction.OnAppear()
-
-
- //    let y: LevelUpgradeViewAction.EventAction = LevelUpgradeViewAction.OnAppear()
- //    let z: LevelUpgradeViewAction.NavigationAction = LevelUpgradeViewAction.OnUpgradeSkipped()
- //    print("x.type: ", x.type)
- //
- //    // FIXME: How `navigationType` is appearing on LevelUpgradeViewAction? it is declared under LevelUpgradeViewAction.NavigationAction only...
- //    print("x.navigationType: ", x.navigationType)
- //    // FIXME: same
- //    print("x.eventType: ", x.eventType)
-
- */

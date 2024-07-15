@@ -10,10 +10,14 @@ import PlaytomicMacros
 
 struct User {
     @storedAccess(defaultValue: "")
-    let userId: String
+    var userId: String
 }
 
 func runStoredAccessMacroPlayground() {
     startRunner()
     defer { stopRunner() }
+    var user = User()
+    print(user.userId)
+    user.userId = UUID.init().uuidString
+    print(user.userId)
 }

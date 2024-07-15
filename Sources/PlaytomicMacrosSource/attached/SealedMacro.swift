@@ -12,10 +12,13 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 enum SealedMacroDiagnostic: PlaytomicMacroError {
-    case smth
+    case noName
 
     var message: String {
-        "Sealed error"
+        switch self {
+        case .noName:
+            "'@Sealed' can only be applied to a type with name"
+        }
     }
 }
 
@@ -35,7 +38,7 @@ public enum SealedMacro: ExtensionMacro {
         }
 
         let modifiers = declaration.modifiers
-        let accessControlToken = modifiers.first?.name
+        let accessControl = modifiers.first?.name.text
         let membersBlock = declaration.memberBlock
         let members = membersBlock.members
 
@@ -66,13 +69,15 @@ public enum SealedMacro: ExtensionMacro {
             }
         }
 
-        let sealedTypesSynax = sealedTypes.keys.map { inheritedClassName in
+        guard !sealedTypes.isEmpty else { return [] }
+
+        let sealedTypesSynax = sealedTypes.keys.map { sealedTypeName in
             generateEnumType(
-                typeName: (inheritedClassName + SEALED_TYPE_SUFFIX).excluding(typeIdentifier).joined(),
-                onGenerateCases: {
+                typeName: (sealedTypeName == typeIdentifier ? "" : sealedTypeName) + SEALED_TYPE_SUFFIX,
+                caseBuilder: {
                     generateEnumCases(
                         parenTypeName: typeIdentifier,
-                        allCases: sealedTypes[inheritedClassName] ?? []
+                        allCases: sealedTypes[sealedTypeName] ?? []
                     )
                 }
             )
@@ -80,7 +85,7 @@ public enum SealedMacro: ExtensionMacro {
 
         let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
             """
-            extension \(type.trimmed) {
+            \(raw:accessControl ?? "") extension \(type.trimmed) {
             \(raw: sealedTypesSynax)
             }
             """
@@ -91,9 +96,9 @@ public enum SealedMacro: ExtensionMacro {
             .sorted(by: { lhs, rhs in lhs == typeIdentifier })
             .map { sealedType in
                 try generateSealedTypesExtensions(
+                    accessControl: accessControl ?? "",
                     parenTypeName: typeIdentifier,
-                    subTypeName: sealedType,
-                    subActionTypeName: sealedType.excluding(typeIdentifier).joined(),
+                    sealedTypeName: typeIdentifier == sealedType ? "" : sealedType,
                     allCases: sealedTypes[sealedType] ?? []
                 )
             }
@@ -103,11 +108,11 @@ public enum SealedMacro: ExtensionMacro {
 
     private static func generateEnumType(
         typeName: String,
-        onGenerateCases: @escaping () -> String
+        caseBuilder: @escaping () -> String
     ) -> String {
         """
         enum \(typeName) {
-        \(onGenerateCases())
+        \(caseBuilder())
         }
         """
     }
@@ -121,27 +126,37 @@ public enum SealedMacro: ExtensionMacro {
     }
 
     private static func generateSealedTypesExtensions(
+        accessControl: String,
         parenTypeName: String,
-        subTypeName: String,
-        subActionTypeName: String,
+        sealedTypeName: String,
         allCases: [ClassDeclSyntax]
     ) throws -> ExtensionDeclSyntax {
         let allCasesSyntax = allCases.map { eachCase in
             let name = eachCase.name.text
-            return "case is \(parenTypeName).\(name): \(parenTypeName).\(subActionTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
+            let caseStatementType: String = "\(parenTypeName).\(sealedTypeName)\(SEALED_TYPE_SUFFIX).\(name)"
+            let caseStatementArgument: String = eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : ""
+            return """
+            case is \(parenTypeName).\(name):
+            \(caseStatementType)\(caseStatementArgument)
+            """
         }.joined(separator: "\n")
 
-        let str = #"\(self)"#
+
+        let enumName: String = "\(parenTypeName)\(sealedTypeName.isEmpty ? "" : ".\(sealedTypeName)")"
+        let variableName: String = sealedTypeName.isEmpty ? "type" : "\(sealedTypeName.lowerCasedFirstWord)Type"
+        let variableType: String = "\(parenTypeName).\(sealedTypeName)\(SEALED_TYPE_SUFFIX)"
+        let defaultCaseStatement: String = #"fatalError("Unknown type \(self) in "# + variableType + #"")"#
 
         return try ExtensionDeclSyntax(
         """
-        extension \(raw: subTypeName == parenTypeName ? "" : "\("\(parenTypeName).")")\(raw: subTypeName) {
-        var \(subActionTypeName.isEmpty ? "type" : "\(raw: subActionTypeName.lowercased())Type"): \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
-        switch self {
-        \(raw: allCasesSyntax)
-        default: fatalError("Unknown \(raw: subTypeName) type \(raw: str)")
-        }
-        }
+        \(raw: accessControl) extension \(raw: enumName) {
+            var \(raw: variableName): \(raw: variableType) {
+                switch self {
+                \(raw: allCasesSyntax)
+                default: 
+                    \(raw: defaultCaseStatement)
+                }
+            }
         }
         """
         )
