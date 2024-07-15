@@ -13,5 +13,7 @@ import PlaytomicMacros
  malformed an error is emitted. Otherwise a non-optional URL is expanded.
  */
 func runURLMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
     print(#URL("https://playtomic.io/"))
 }

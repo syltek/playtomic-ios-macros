@@ -20,6 +20,8 @@ await runAddAsyncMacroPlayground()
 
 runCopyableMacroPlayground()
 
+runAddInitMacroPlayground()
+
 runCaseDetectionMacroPlayground()
 
 // MARK: - Attach memberAttribute

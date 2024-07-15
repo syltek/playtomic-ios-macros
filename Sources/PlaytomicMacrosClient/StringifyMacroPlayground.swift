@@ -9,6 +9,8 @@ import Foundation
 import PlaytomicMacros
 
 func runStringifyMacroPlayground() {
+    startRunner()
+    defer { stopRunner() }
     let a = 17
     let b = 25
     let (result, code) = #stringify(a + b)

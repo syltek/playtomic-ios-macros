@@ -47,6 +47,11 @@ public macro Copyable() = #externalMacro(
 )
 
 @attached(member, names: arbitrary)
+public macro AddInit() = #externalMacro(
+    module: "PlaytomicMacrosSource", type: "AddInitMacro"
+)
+
+@attached(member, names: arbitrary)
 public macro caseDetection() = #externalMacro(module: "PlaytomicMacrosSource", type: "CaseDetectionMacro")
 
 // MARK: - Attach memberAttribute

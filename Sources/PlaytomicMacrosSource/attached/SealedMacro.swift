@@ -12,10 +12,13 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 enum SealedMacroDiagnostic: PlaytomicMacroError {
-    case notAStructOrClass
+    case noName
 
     var message: String {
-        "'@Copyable' can only be applied to a struct or class"
+        switch self {
+        case .noName:
+            "'@Sealed' can only be applied to a type with name"
+        }
     }
 }
 
@@ -29,20 +32,13 @@ public enum SealedMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        //        guard declaration.as(StructDeclSyntax.self) != nil || declaration.as(ClassDeclSyntax.self) != nil,
-        //              let name = declaration.as(StructDeclSyntax.self)?.name ?? declaration.as(ClassDeclSyntax.self)?.name else {
-        //            let diagnostic = Diagnostic(node: node, message: CopyableMacroDiagnostic.notAStructOrClass)
-        //            context.diagnose(diagnostic)
-        //            return []
-        //        }
-
 
         guard let typeIdentifier = type.as(IdentifierTypeSyntax.self)?.name.trimmed.text else {
             return []
         }
 
         let modifiers = declaration.modifiers
-        let accessControlToken = modifiers.first?.name
+        let accessControl = modifiers.first?.name.text
         let membersBlock = declaration.memberBlock
         let members = membersBlock.members
 
@@ -73,63 +69,50 @@ public enum SealedMacro: ExtensionMacro {
             }
         }
 
-        print("PRINT<<", sealedTypes)
+        guard !sealedTypes.isEmpty else { return [] }
 
-        let sealedTypesSynax = sealedTypes.keys.map { inheritedClassName in
+        let sealedTypesSynax = sealedTypes.keys.map { sealedTypeName in
             generateEnumType(
-                typeName: inheritedClassName,
-                onGenerateCases: {
+                typeName: (sealedTypeName == typeIdentifier ? "" : sealedTypeName) + SEALED_TYPE_SUFFIX,
+                caseBuilder: {
                     generateEnumCases(
                         parenTypeName: typeIdentifier,
-                        allCases: sealedTypes[inheritedClassName] ?? []
+                        allCases: sealedTypes[sealedTypeName] ?? []
                     )
                 }
             )
         }.joined(separator: "\n\n").appending("\n")
 
-//        let typeProperty = generateTypeProperty(
-//            parenTypeName: typeIdentifier,
-//            allCases: sealedTypes[typeIdentifier] ?? []
-//        ).appending("\n")
-
         let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
             """
-            extension \(type.trimmed) {
+            \(raw:accessControl ?? "") extension \(type.trimmed) {
             \(raw: sealedTypesSynax)
             }
             """
-            )
-
-//        let sealedTypesDefinitionExtensionSyntax = try ExtensionDeclSyntax(
-//            """
-//            extension \(type.trimmed) {
-//            \(raw: sealedTypesSynax)
-//            \(raw: typeProperty)
-//            }
-//            """
-//            )
+        )
 
 
         let sealedTypesResolutionExtensionSyntaxes = try sealedTypes.keys
             .sorted(by: { lhs, rhs in lhs == typeIdentifier })
             .map { sealedType in
-            try generateSealedTypesExtensions(
-                parenTypeName: typeIdentifier,
-                subActionTypeName: sealedType,
-                allCases: sealedTypes[sealedType] ?? []
-            )
-        }
+                try generateSealedTypesExtensions(
+                    accessControl: accessControl ?? "",
+                    parenTypeName: typeIdentifier,
+                    sealedTypeName: typeIdentifier == sealedType ? "" : sealedType,
+                    allCases: sealedTypes[sealedType] ?? []
+                )
+            }
 
         return [sealedTypesDefinitionExtensionSyntax] + sealedTypesResolutionExtensionSyntaxes
     }
 
     private static func generateEnumType(
         typeName: String,
-        onGenerateCases: @escaping () -> String
+        caseBuilder: @escaping () -> String
     ) -> String {
         """
-        enum \(typeName)\(SEALED_TYPE_SUFFIX) {
-        \(onGenerateCases())
+        enum \(typeName) {
+        \(caseBuilder())
         }
         """
     }
@@ -142,42 +125,38 @@ public enum SealedMacro: ExtensionMacro {
         .joined(separator: "\n")
     }
 
-    private static func generateTypeProperty(parenTypeName: String, allCases: [ClassDeclSyntax]) -> String {
-        let allCasesSyntax = allCases.map { eachCase in
-            let name = eachCase.name.text
-            return "case is \(parenTypeName).\(name): \(parenTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
-        }.joined(separator: "\n")
-
-        return """
-        var type: \(parenTypeName)\(SEALED_TYPE_SUFFIX) {
-        switch self {
-        \(allCasesSyntax)
-        default: fatalError("Unknown subclass")
-        }
-        }
-        """
-    }
-
-
     private static func generateSealedTypesExtensions(
+        accessControl: String,
         parenTypeName: String,
-        subActionTypeName: String,
+        sealedTypeName: String,
         allCases: [ClassDeclSyntax]
     ) throws -> ExtensionDeclSyntax {
         let allCasesSyntax = allCases.map { eachCase in
             let name = eachCase.name.text
-            return "case is \(parenTypeName).\(name): \(parenTypeName).\(subActionTypeName)\(SEALED_TYPE_SUFFIX).\(name)\(eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : "")"
+            let caseStatementType: String = "\(parenTypeName).\(sealedTypeName)\(SEALED_TYPE_SUFFIX).\(name)"
+            let caseStatementArgument: String = eachCase.isContainProperty ? "(self as! \(parenTypeName).\(name))" : ""
+            return """
+            case is \(parenTypeName).\(name):
+            \(caseStatementType)\(caseStatementArgument)
+            """
         }.joined(separator: "\n")
+
+
+        let enumName: String = "\(parenTypeName)\(sealedTypeName.isEmpty ? "" : ".\(sealedTypeName)")"
+        let variableName: String = sealedTypeName.isEmpty ? "type" : "\(sealedTypeName.lowerCasedFirstWord)Type"
+        let variableType: String = "\(parenTypeName).\(sealedTypeName)\(SEALED_TYPE_SUFFIX)"
+        let defaultCaseStatement: String = #"fatalError("Unknown type \(self) in "# + variableType + #"")"#
 
         return try ExtensionDeclSyntax(
         """
-        extension \(raw: subActionTypeName) {
-        var type: \(raw: parenTypeName).\(raw: subActionTypeName)\(raw: SEALED_TYPE_SUFFIX) {
-        switch self {
-        \(raw: allCasesSyntax)
-        default: fatalError("Unknown \(raw: subActionTypeName) type")
-        }
-        }
+        \(raw: accessControl) extension \(raw: enumName) {
+            var \(raw: variableName): \(raw: variableType) {
+                switch self {
+                \(raw: allCasesSyntax)
+                default: 
+                    \(raw: defaultCaseStatement)
+                }
+            }
         }
         """
         )
