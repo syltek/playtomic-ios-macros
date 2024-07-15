@@ -47,6 +47,11 @@ public macro Copyable() = #externalMacro(
 )
 
 @attached(member, names: arbitrary)
+public macro AddInit() = #externalMacro(
+    module: "PlaytomicMacrosSource", type: "AddInitMacro"
+)
+
+@attached(member, names: arbitrary)
 public macro caseDetection() = #externalMacro(module: "PlaytomicMacrosSource", type: "CaseDetectionMacro")
 
 // MARK: - Attach memberAttribute
@@ -66,3 +71,5 @@ public macro storedAccess<T>(defaultValue: T, key: String? = nil, store: UserDef
 @attached(extension, conformances: Equatable)
 public macro equatable() = #externalMacro(module: "PlaytomicMacrosSource", type: "EquatableMacro")
 
+@attached(extension, names: arbitrary)
+public macro Sealed() = #externalMacro(module: "PlaytomicMacrosSource", type: "SealedMacro")

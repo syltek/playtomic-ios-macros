@@ -16,6 +16,8 @@ internal protocol PlaytomicMacroError: CustomStringConvertible, LocalizedError, 
 
     var severity: DiagnosticSeverity { get }
 
+    var fixItID: MessageID { get }
+
 }
 
 extension PlaytomicMacroError {
@@ -34,5 +36,9 @@ extension PlaytomicMacroError {
 
     var severity: DiagnosticSeverity {
         return DiagnosticSeverity.error
+    }
+
+    var fixItID: MessageID {
+        return diagnosticID
     }
 }

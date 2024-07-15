@@ -4,75 +4,36 @@ import Foundation
 
 // MARK: - Freestanding expression
 
-// "#URL" macro provides compile time checked URL construction. If the URL is
-// malformed an error is emitted. Otherwise a non-optional URL is expanded.
-print(#URL("https://playtomic.io/"))
+runStringifyMacroPlayground()
 
-let a = 17
-let b = 25
-let (result, code) = #stringify(a + b)
+runURLMacroPlayground()
 
 // MARK: - Freestanding declaration
-#warning("This macro generates a message")
+
+runWarningMacroPlayground()
 
 // MARK: - Attach peer
-@addAsyncMacro
-func sportsSelector(sports: [String], callback: @escaping (String) -> Void) -> Void {}
-let sport = await sportsSelector(sports: ["Padel", "Tenis", "Pickleball"])
+
+await runAddAsyncMacroPlayground()
 
 // MARK: - Attach member
 
-/**
- `@Copyable` is a Swift syntax macro that generates a `copy` function for a class or struct,
- similar to the `copy` function in Android. This function allows you to create a copy of an instance
- with modified properties.
- */
-@Copyable
-struct ExampleViewState {
-    let title: String
-    let count: Int?
-}
+runCopyableMacroPlayground()
 
-let x = ExampleViewState(title: "1", count: 2)
+runAddInitMacroPlayground()
 
-print(x)
-
-print(x.copy(title: "2", count: .value(nil)))
-
-
-@caseDetection
-enum ProfileViewState {
-    case loading
-    case loaded(userName: String)
-}
-var state = ProfileViewState.loading
-print("is the view state loading?: \(state.isLoading)")
-state = ProfileViewState.loaded(userName: "Random name")
-print("is the view state loaded?: \(state.isLoaded)")
+runCaseDetectionMacroPlayground()
 
 // MARK: - Attach memberAttribute
-@wrapStoredProperties(#"available(*, deprecated, message: "hands off my data")"#)
-struct OldStorage {
-  var x: Int
-}
+
+runWrapStoredPropertiesMacroPlayground()
 
 // MARK: - Attach accessor
-struct User {
-    @storedAccess(defaultValue: "")
-    let userId: String
-}
+
+runStoredAccessMacroPlayground()
 
 // MARK: - Attach conformance
-@equatable
-struct Match {
-    let id: String
-    let team: MatchTeam
-}
 
-@equatable
-struct MatchTeam {
-    let id: String
-    let playerd: [String]
-}
+runEquatableMacroPlayground()
 
-
+runSealedMacroPlayground()
