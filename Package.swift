@@ -11,10 +11,9 @@ let testProjectName = "\(mainProjectName)Tests"
 
 let package = Package(
     name: mainProjectName,
-    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)],
     products: [
-        .library(name: mainProjectName, targets: [mainProjectName]),
-        .executable(name: clientProjectName, targets: [clientProjectName])
+        .library(name: mainProjectName, targets: [mainProjectName])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
