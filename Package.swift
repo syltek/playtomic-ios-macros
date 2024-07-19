@@ -10,27 +10,48 @@ let clientProjectName = "\(mainProjectName)Client"
 let testProjectName = "\(mainProjectName)Tests"
 
 let package = Package(
-    name: mainProjectName,
-    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)],
+    name: "PlaytomicMacros",
+    platforms: [
+        .macOS(.v10_15),
+        .iOS(.v13),
+        .tvOS(.v13),
+        .watchOS(.v6),
+        .macCatalyst(.v13)
+    ],
     products: [
-        .library(name: mainProjectName, targets: [mainProjectName])
+        .library(name: "PlaytomicMacros", targets: ["PlaytomicMacros"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
+        .package(
+            url: "https://github.com/apple/swift-syntax.git",
+            from: "509.0.0"
+        ),
     ],
     targets: [
-        .macro(name: sourceProjectName, dependencies: [
-            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-            .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-        ]),
-        .target(name: mainProjectName, dependencies: [Target.Dependency(stringLiteral: sourceProjectName)]),
-        .executableTarget(name: clientProjectName, dependencies: [Target.Dependency(stringLiteral: mainProjectName)]),
-        .testTarget(
-            name: testProjectName,
+        .target(
+            name: "PlaytomicMacros",
             dependencies: [
-                Target.Dependency(stringLiteral: sourceProjectName),
+                "PlaytomicMacrosSource"
+            ]
+        ),
+        .macro(name: "PlaytomicMacrosSource", dependencies: [
+            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+            .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            .product(name: "SwiftDiagnostics", package: "swift-syntax")
+        ]),
+        .testTarget(
+            name: "PlaytomicMacrosTests",
+            dependencies: [
+                "PlaytomicMacrosSource",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
+        .executableTarget(
+            name: "PlaytomicMacrosClient",
+            dependencies: [
+                "PlaytomicMacros"
+            ]
+        ),
+
     ]
 )
