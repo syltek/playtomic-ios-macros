@@ -1,16 +1,8 @@
-//
-//  Main.swift
-//
-//
-//  Created by Manuel González Villegas on 12/9/23.
-//
-
-#if canImport(SwiftCompilerPlugin)
 import SwiftCompilerPlugin
 import SwiftSyntaxMacros
 
 @main
-struct MyPlugin: CompilerPlugin {
+struct MacrosPlugin: CompilerPlugin {
   let providingMacros: [Macro.Type] = [
     StringifyMacro.self,
     WarningMacro.self,
@@ -24,6 +16,4 @@ struct MyPlugin: CompilerPlugin {
     SealedMacro.self,
     AddInitMacro.self
   ]
-}
-#endif
- 
+} 
