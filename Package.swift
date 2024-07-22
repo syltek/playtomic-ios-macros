@@ -4,11 +4,6 @@
 import PackageDescription
 import CompilerPluginSupport
 
-let mainProjectName = "PlaytomicMacros"
-let sourceProjectName = "\(mainProjectName)Source"
-let clientProjectName = "\(mainProjectName)Client"
-let testProjectName = "\(mainProjectName)Tests"
-
 let package = Package(
     name: "PlaytomicMacros",
     platforms: [
@@ -23,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/apple/swift-syntax.git",
+            url: "https://github.com/apple/swift-syntax",
             from: "509.0.0"
         ),
     ],
@@ -45,13 +40,6 @@ let package = Package(
                 "PlaytomicMacrosSource",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
-        ),
-        .executableTarget(
-            name: "PlaytomicMacrosClient",
-            dependencies: [
-                "PlaytomicMacros"
-            ]
-        ),
-
+        )
     ]
 )
