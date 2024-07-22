@@ -3,6 +3,15 @@
 
 import Foundation
 
+@attached(member, names: named(init))
+public macro Init(
+    defaults: [String: Any] = [:],
+    wildcards: [String] = [],
+    public: Bool = true
+) = #externalMacro(
+    module: "PlaytomicMacros",
+    type: "InitMacro"
+)
 
 // MARK: - Freestanding expression rol
 
@@ -41,10 +50,10 @@ import Foundation
  similar to the `copy` function in Android. This function allows you to create a copy of an instance
  with modified properties.
  */
-@attached(member, names: arbitrary)
-public macro Copyable() = #externalMacro(
-    module: "PlaytomicMacrosSource", type: "CopyableMacro"
-)
+//@attached(member, names: arbitrary)
+//public macro Copyable() = #externalMacro(
+//    module: "PlaytomicMacrosSource", type: "CopyableMacro"
+//)
 
 //@attached(member, names: arbitrary)
 //public macro AddInit() = #externalMacro(
