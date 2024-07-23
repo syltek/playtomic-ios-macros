@@ -70,6 +70,6 @@ public macro AddInit() = #externalMacro(
 //// MARK: - Attach conformance
 //@attached(extension, conformances: Equatable)
 //public macro equatable() = #externalMacro(module: "PlaytomicMacrosSource", type: "EquatableMacro")
-//
-//@attached(extension, names: arbitrary)
-//public macro Sealed() = #externalMacro(module: "PlaytomicMacrosSource", type: "SealedMacro")
+
+@attached(extension, names: arbitrary)
+public macro Sealed() = #externalMacro(module: "PlaytomicMacrosSource", type: "SealedMacro")
