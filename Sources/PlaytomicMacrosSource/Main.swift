@@ -17,7 +17,7 @@ struct MyPlugin: CompilerPlugin {
 //    URLMacro.self,
 //    AddAsyncMacro.self,
 //    CaseDetectionMacro.self,
-//    CopyableMacro.self,
+    CopyableMacro.self,
 //    WrapStoredPropertiesMacro.self,
 //    StoredAccessMacro.self,
 //    EquatableMacro.self,
