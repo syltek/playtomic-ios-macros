@@ -14,21 +14,21 @@ import Foundation
 
  produces a tuple `(x + y, "x + y")`.
  */
-@freestanding(expression)
-public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "PlaytomicMacrosSource", type: "StringifyMacro")
-
-/**
- `#URL` Creates a non-optional URL from a static string. The string is checked to
- be valid during compile time.
- */
-@freestanding(expression)
-public macro URL(_ stringLiteral: String) -> URL = #externalMacro(
-    module: "PlaytomicMacrosSource", type: "URLMacro"
-)
-
-// MARK: - Freestanding declaration rol
-@freestanding(declaration)
-public macro warning(_ message: String) = #externalMacro(module: "PlaytomicMacrosSource", type: "WarningMacro")
+//@freestanding(expression)
+//public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "PlaytomicMacrosSource", type: "StringifyMacro")
+//
+///**
+// `#URL` Creates a non-optional URL from a static string. The string is checked to
+// be valid during compile time.
+// */
+//@freestanding(expression)
+//public macro URL(_ stringLiteral: String) -> URL = #externalMacro(
+//    module: "PlaytomicMacrosSource", type: "URLMacro"
+//)
+//
+//// MARK: - Freestanding declaration rol
+//@freestanding(declaration)
+//public macro warning(_ message: String) = #externalMacro(module: "PlaytomicMacrosSource", type: "WarningMacro")
 
 //// MARK: - Attach peers
 //@attached(peer, names: overloaded)
@@ -36,15 +36,15 @@ public macro warning(_ message: String) = #externalMacro(module: "PlaytomicMacro
 //
 //// MARK: - Attach member
 //
-///**
-// `@Copyable` is a Swift syntax macro that generates a `copy` function for a class or struct,
-// similar to the `copy` function in Android. This function allows you to create a copy of an instance
-// with modified properties.
-// */
-//@attached(member, names: arbitrary)
-//public macro Copyable() = #externalMacro(
-//    module: "PlaytomicMacrosSource", type: "CopyableMacro"
-//)
+/**
+ `@Copyable` is a Swift syntax macro that generates a `copy` function for a class or struct,
+ similar to the `copy` function in Android. This function allows you to create a copy of an instance
+ with modified properties.
+ */
+@attached(member, names: arbitrary)
+public macro Copyable() = #externalMacro(
+    module: "PlaytomicMacrosSource", type: "CopyableMacro"
+)
 
 @attached(member, names: arbitrary)
 public macro AddInit() = #externalMacro(
