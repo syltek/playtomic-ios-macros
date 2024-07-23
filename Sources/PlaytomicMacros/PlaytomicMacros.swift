@@ -4,32 +4,32 @@
 import Foundation
 
 
-//// MARK: - Freestanding expression rol
-//
-///**
-// A macro that produces both a value and a string containing the
-// source code that generated the value. For example,
-//
-// #stringify(x + y)
-//
-// produces a tuple `(x + y, "x + y")`.
-// */
-//@freestanding(expression)
-//public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "PlaytomicMacrosSource", type: "StringifyMacro")
-//
-///**
-// `#URL` Creates a non-optional URL from a static string. The string is checked to
-// be valid during compile time.
-// */
-//@freestanding(expression)
-//public macro URL(_ stringLiteral: String) -> URL = #externalMacro(
-//    module: "PlaytomicMacrosSource", type: "URLMacro"
-//)
-//
-//// MARK: - Freestanding declaration rol
-//@freestanding(declaration)
-//public macro warning(_ message: String) = #externalMacro(module: "PlaytomicMacrosSource", type: "WarningMacro")
-//
+// MARK: - Freestanding expression rol
+
+/**
+ A macro that produces both a value and a string containing the
+ source code that generated the value. For example,
+
+ #stringify(x + y)
+
+ produces a tuple `(x + y, "x + y")`.
+ */
+@freestanding(expression)
+public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "PlaytomicMacrosSource", type: "StringifyMacro")
+
+/**
+ `#URL` Creates a non-optional URL from a static string. The string is checked to
+ be valid during compile time.
+ */
+@freestanding(expression)
+public macro URL(_ stringLiteral: String) -> URL = #externalMacro(
+    module: "PlaytomicMacrosSource", type: "URLMacro"
+)
+
+// MARK: - Freestanding declaration rol
+@freestanding(declaration)
+public macro warning(_ message: String) = #externalMacro(module: "PlaytomicMacrosSource", type: "WarningMacro")
+
 //// MARK: - Attach peers
 //@attached(peer, names: overloaded)
 //public macro addAsyncMacro() = #externalMacro(module: "PlaytomicMacrosSource", type: "AddAsyncMacro")
