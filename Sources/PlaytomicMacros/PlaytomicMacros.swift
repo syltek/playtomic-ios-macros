@@ -9,6 +9,6 @@ public macro Init(
     wildcards: [String] = [],
     public: Bool = true
 ) = #externalMacro(
-    module: "PlaytomicMacros",
+    module: "PlaytomicMacrosSource",
     type: "InitMacro"
 )
