@@ -14,11 +14,14 @@ let package = Package(
         .macCatalyst(.v13)
     ],
     products: [
-        .library(name: "PlaytomicMacros", targets: ["PlaytomicMacros"])
+        .library(name: "PlaytomicMacros", targets: ["PlaytomicMacros"]),
+        .executable(name: "PlaytomicMacrosClient", targets: ["PlaytomicMacrosClient"])
     ],
     dependencies: [
         .package(
-            url: "https://github.com/apple/swift-syntax",
+            url: "https://github.com/apple/swift-syntax.git",
+            // Must be in sync with xcode and playtomic-ios SWIFT_VERSION and swift tools version on top of this file
+            // It could stall the CI job forever if swift version mismatch playtomic-ios repo
             exact: "509.0.0"
         ),
     ],
@@ -33,6 +36,20 @@ let package = Package(
             .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
             .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             .product(name: "SwiftDiagnostics", package: "swift-syntax")
-        ])
+        ]),
+        .testTarget(
+            name: "PlaytomicMacrosTests",
+            dependencies: [
+                "PlaytomicMacrosSource",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
+        ),
+        .executableTarget(
+            name: "PlaytomicMacrosClient",
+            dependencies: [
+                "PlaytomicMacros"
+            ]
+        ),
+
     ]
 )
