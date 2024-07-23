@@ -16,29 +16,29 @@ public struct AddAsyncMacro: PeerMacro {
     ) throws -> [SwiftSyntax.DeclSyntax] {
         // Only on functions at the moment
         guard var funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-            throw PlaytomicMacrosError.message("@addAsync only works on functions")
+            throw DefaultDiagnostic("@addAsync only works on functions")
         }
 
         // This only makes sense for non async functions
         if funcDecl.signature.effectSpecifiers?.asyncSpecifier != nil {
-            throw PlaytomicMacrosError.message("@addAsync requires an non async function")
+            throw DefaultDiagnostic("@addAsync requires an non async function")
         }
 
         // This only makes sense void functions
         if funcDecl.signature.returnClause?.type.as(IdentifierTypeSyntax.self)?.name.text != "Void" {
-            throw PlaytomicMacrosError.message("@addAsync requires an function that returns void")
+            throw DefaultDiagnostic("@addAsync requires an function that returns void")
         }
 
         // Requires a completion handler block as last parameter
         guard let completionHandlerParameterAttribute = funcDecl.signature.parameterClause.parameters.last?.type.as(AttributedTypeSyntax.self),
               let completionHandlerParameter = completionHandlerParameterAttribute.baseType.as(FunctionTypeSyntax.self)
         else {
-            throw PlaytomicMacrosError.message("@addAsync requires an function that has a completion handler as last parameter")
+            throw DefaultDiagnostic("@addAsync requires an function that has a completion handler as last parameter")
         }
 
         // Completion handler needs to return Void
         if completionHandlerParameter.returnClause.type.as(IdentifierTypeSyntax.self)?.name.text != "Void" {
-            throw PlaytomicMacrosError.message("@addAsync requires an function that has a completion handler that returns Void")
+            throw DefaultDiagnostic("@addAsync requires an function that has a completion handler that returns Void")
         }
 
         let returnType = completionHandlerParameter.parameters.first?.type

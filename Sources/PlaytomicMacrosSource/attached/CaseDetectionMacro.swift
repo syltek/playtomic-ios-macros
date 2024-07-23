@@ -31,16 +31,4 @@ public enum CaseDetectionMacro: MemberMacro {
                 """
             }
     }
-
-}
-
-private extension TokenSyntax {
-    var initialUppercased: String {
-        let name = self.text
-        guard let initial = name.first else {
-            return name
-        }
-
-        return "\(initial.uppercased())\(name.dropFirst())"
-    }
 }

@@ -11,6 +11,39 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
+enum StoredAccessMacroDiagnostic: PlaytomicDiagnostic {
+    case wrongArgument
+    case missingDefaultValue
+    case notSupportedType
+    case invalidDeclaration
+    case unsupportedType
+
+    var message: String {
+        switch self {
+        case .wrongArgument:
+            "Wrong argument"
+        case .missingDefaultValue:
+            "Missing defaultValue"
+        case .notSupportedType:
+            "This type is not supported yet"
+        case .invalidDeclaration:
+            "Invalid declaration"
+        case .unsupportedType:
+            "Unsupported type"
+        }
+    }
+
+    var severity: DiagnosticSeverity {
+        switch self {
+        case .wrongArgument, .missingDefaultValue, .invalidDeclaration:
+            DiagnosticSeverity.warning
+        case .notSupportedType, .unsupportedType:
+            DiagnosticSeverity.error
+        }
+    }
+}
+
+
 public struct StoredAccessMacro: AccessorMacro {
     public static func expansion(
         of node: AttributeSyntax,
@@ -19,28 +52,18 @@ public struct StoredAccessMacro: AccessorMacro {
     ) throws -> [AccessorDeclSyntax] {
         guard let arguments = node.arguments?.as(LabeledExprListSyntax.self)
         else {
-            context.diagnose(.init(
-                node: node,
-                message: PlaytomicDiagnosticMessage(
-                    message: "Wrong argument",
-                    diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                    severity: .warning
-                )
-            ))
+            context.diagnose(
+                StoredAccessMacroDiagnostic.wrongArgument.diagnostic(node: node)
+            )
             return []
         }
 
         guard let defaultValue = arguments.first(where: { syntax in
             syntax.label?.text == "defaultValue"
         }) else {
-            context.diagnose(.init(
-                node: node,
-                message: PlaytomicDiagnosticMessage(
-                    message: "Missing defaultValue",
-                    diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                    severity: .warning
-                )
-            ))
+            context.diagnose(
+                StoredAccessMacroDiagnostic.missingDefaultValue.diagnostic(node: node)
+            )
             return []
         }
 
@@ -61,14 +84,9 @@ public struct StoredAccessMacro: AccessorMacro {
                let base = memberAccess.base?.as(DeclReferenceExprSyntax.self) {
                 propertyTypeExpression = base.baseName.text
             } else {
-                context.diagnose(.init(
-                    node: node,
-                    message: PlaytomicDiagnosticMessage(
-                        message: "This type is not supported yet",
-                        diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                        severity: .error
-                    )
-                ))
+                context.diagnose(
+                    StoredAccessMacroDiagnostic.notSupportedType.diagnostic(node: node)
+                )
                 return []
             }
         }
@@ -83,25 +101,15 @@ public struct StoredAccessMacro: AccessorMacro {
         }
 
         guard let declationSyntax = declaration.as(VariableDeclSyntax.self)?.bindings else {
-            context.diagnose(.init(
-                node: node,
-                message: PlaytomicDiagnosticMessage(
-                    message: "",
-                    diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                    severity: .warning
-                )
-            ))
+            context.diagnose(
+                StoredAccessMacroDiagnostic.invalidDeclaration.diagnostic(node: node)
+            )
             return []
         }
         guard let firstBindingSyntax = declationSyntax.first?.as(PatternBindingSyntax.self)?.pattern.as(IdentifierPatternSyntax.self) else {
-            context.diagnose(.init(
-                node: node,
-                message: PlaytomicDiagnosticMessage(
-                    message: "",
-                    diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                    severity: .warning
-                )
-            ))
+            context.diagnose(
+                StoredAccessMacroDiagnostic.invalidDeclaration.diagnostic(node: node)
+            )
             return []
         }
 
@@ -133,29 +141,24 @@ public struct StoredAccessMacro: AccessorMacro {
                     \(raw: storeExpression).float(forKey: \(raw: storeKeyValue))
                     """
         } else {
-            context.diagnose(.init(
-                node: node,
-                message: PlaytomicDiagnosticMessage(
-                    message: "Unsupported type",
-                    diagnosticID: .init(domain: "playtomic", id: "storedAccess"),
-                    severity: .error
-                )
-            ))
+            context.diagnose(
+                StoredAccessMacroDiagnostic.unsupportedType.diagnostic(node: node)
+            )
             return []
         }
 
         return [
-                    """
-                    get {
-                        if \(raw: storeExpression).value(forKey: \(raw: storeKeyValue)) == nil {
-                            return \(raw: defaultValueDescription)
-                        }
-                        return \(getExpression)
+                """
+                get {
+                    if \(raw: storeExpression).value(forKey: \(raw: storeKeyValue)) == nil {
+                        return \(raw: defaultValueDescription)
                     }
-                    set {
-                        \(setExpression)
-                    }
-                    """
+                    return \(getExpression)
+                }
+                set {
+                    \(setExpression)
+                }
+                """
         ]
     }
 }
