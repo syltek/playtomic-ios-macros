@@ -15,7 +15,7 @@ let package = Package(
     ],
     products: [
         .library(name: "PlaytomicMacros", targets: ["PlaytomicMacros"]),
-//        .executable(name: "PlaytomicMacrosClient", targets: ["PlaytomicMacrosClient"])
+        .executable(name: "PlaytomicMacrosClient", targets: ["PlaytomicMacrosClient"])
     ],
     dependencies: [
         .package(
@@ -37,18 +37,18 @@ let package = Package(
             .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             .product(name: "SwiftDiagnostics", package: "swift-syntax")
         ]),
-//        .testTarget(
-//            name: "PlaytomicMacrosTests",
-//            dependencies: [
-//                "PlaytomicMacrosSource",
-//                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
-//            ]
-//        ),
-//        .executableTarget(
-//            name: "PlaytomicMacrosClient",
-//            dependencies: [
-//                "PlaytomicMacros"
-//            ]
-//        ),
+        .testTarget(
+            name: "PlaytomicMacrosTests",
+            dependencies: [
+                "PlaytomicMacrosSource",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
+        ),
+        .executableTarget(
+            name: "PlaytomicMacrosClient",
+            dependencies: [
+                "PlaytomicMacros"
+            ]
+        )
     ]
 )
